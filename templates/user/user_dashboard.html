@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard.css') }}">
+</head>
+<body>
+
+<header>
+    Welcome, {{ user.full_name }}
+</header>
+
+<section class="card">
+    <h3>Available Parking Lots</h3>
+    <ul>
+        {% if parking_lots %}
+            {% for lot in parking_lots %}
+                <li>
+                    <strong>{{ lot.location_name }}</strong> — ₹{{ lot.price }}/hr<br>
+                    Spots: {{ lot.available_count }}/{{ lot.total_count }} Available
+                    <form method="POST" action="/user/book/{{ lot.id }}?token={{ user.token }}">
+                        <input type="text" name="vehicle_number" placeholder="Enter Vehicle Number" required
+                               style="padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; width: 60%;">
+                        <button type="submit" {% if lot.available_count == 0 %}disabled{% endif %}>
+                            {% if lot.available_count == 0 %}Full{% else %}Book{% endif %}
+                        </button>
+                    </form>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li class="no-data">No parking lots available right now.</li>
+        {% endif %}
+    </ul>
+</section>
+
+<section class="card">
+    <h3>Active Reservations</h3>
+    <ul>
+        {% if active_reservations %}
+            {% for res in active_reservations %}
+                <li>
+                    Lot: <strong>{{ res.spot.lot.location_name }}</strong> |
+                    Spot #: {{ res.spot.spot_number }} |
+                    Vehicle: {{ res.vehicle_number }} |
+                    Started: {{ res.start_time.strftime('%Y-%m-%d %H:%M') }}
+                    <form method="POST" action="/user/vacate/{{ res.id }}?token={{ user.token }}">
+                        <button type="submit">Vacate Spot</button>
+                    </form>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li class="no-data">No active reservations.</li>
+        {% endif %}
+    </ul>
+</section>
+
+<section class="card" style="text-align: center;">
+    <a href="{{ url_for('user.summary', token=user.token) }}">
+        <button class="summary-btn">View Cost Summary Chart</button>
+    </a>
+</section>
+
+</body>
+</html>

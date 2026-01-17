@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
+</head>
+<body>
+
+<header>
+    <h2>Welcome Admin</h2>
+    <nav>
+        <a href="{{ url_for('admin.summary') }}">View Summary Chart</a>
+    </nav>
+</header>
+
+<!-- Create Parking Lot -->
+<section class="card">
+    <h3>Create New Parking Lot</h3>
+    <form method="POST" action="{{ url_for('admin.create_lot') }}">
+        <input name="location_name" placeholder="Location Name" required>
+        <input name="price" type="number" placeholder="Price/hr" step="0.01" required>
+        <input name="address" placeholder="Address" required>
+        <input name="pin_code" placeholder="Pin Code" required>
+        <input name="spot_count" type="number" placeholder="Number of Spots" min="1" required>
+        <button type="submit">Create Lot</button>
+    </form>
+</section>
+
+<!-- Existing Parking Lots -->
+{% for lot in lots %}
+<section class="card">
+    <h3>Edit Lot - {{ lot.location_name }}</h3>
+    <form method="POST" action="{{ url_for('admin.edit_lot', lot_id=lot.id) }}">
+        <input name="location_name" value="{{ lot.location_name }}" required>
+        <input name="price" type="number" value="{{ lot.price }}" step="0.01" required>
+        <input name="address" value="{{ lot.address }}" required>
+        <input name="pin_code" value="{{ lot.pin_code }}" required>
+        <input name="spot_count" type="number" value="{{ total_spots[lot.id] }}" min="1" required>
+        <button type="submit">Update</button>
+    </form>
+
+    <form method="POST" action="{{ url_for('admin.delete_lot', lot_id=lot.id) }}" class="inline" onsubmit="return confirm('Are you sure to delete this lot?')">
+        <button type="submit">Delete Lot</button>
+    </form>
+
+    <p>Total: {{ total_spots[lot.id] }} | Available: {{ available_spots[lot.id] }} | Occupied: {{ occupied_spots[lot.id] }}</p>
+
+</section>
+{% endfor %}
+
+<!-- Registered Users with active Reservation -->
+<section class="card">
+    <h3>Registered Users with Active Reservations</h3>
+    {% if users %}
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Username</th> 
+                <th>Parking Lot</th>
+                <th>Spot ID</th>
+                <th>Vehicle Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                {% set active_reservations = user.reservations | selectattr('end_time', '==', None) | list %}
+                {% for reservation in active_reservations %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.user_name }}</td> 
+                        <td>{{ reservation.spot.lot.location_name }}</td>
+                        <td>{{ reservation.spot.id }}</td>
+                        <td>{{ reservation.vehicle_number }}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No users registered yet.</p>
+    {% endif %}
+</section>
+
+
+<!-- All Registered Users Table -->
+<section class="card">
+    <h3>All Registered Users</h3>
+    {% if users %}
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Full Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.user_name }}</td>
+                <td>{{ user.full_name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No users registered yet.</p>
+    {% endif %}
+</section>
+
+</body>
+</html>
